@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables & secrets
+.env
+
+# Temporary runtime databases (except committed demo/eval artifacts)
+*.db
+*.db-shm
+*.db-wal
+data/locomo10.json
+/tmp_*/
+.pytest_cache/
+*.egg-info/
+dist/
+build/

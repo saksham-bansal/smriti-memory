@@ -1,0 +1,493 @@
+{
+  "benchmark": "LoCoMo (ACL 2024, snap-research/locomo) + Bi-Temporal Supersession Slice",
+  "source_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "random_seed": 42,
+  "num_conversations": 3,
+  "total_sessions": 42,
+  "total_turns": 800,
+  "total_questions": 102,
+  "token_budget": 1500,
+  "full_context_tokens_by_conv": {
+    "conv-26": 21452,
+    "conv-30": 16134,
+    "bi_temporal_updates_01": 2500
+  },
+  "systems": {
+    "baseline_recency": {
+      "label": "1. Sliding-Window Recency Buffer",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.0686,
+        "answer_recall": 0.1483,
+        "token_f1": 0.0246,
+        "citation_recall": 0.098,
+        "citation_precision": 0.1373,
+        "citation_f1": 0.1,
+        "retrieval_recall": 0.1471,
+        "session_provenance_hit": 0.1569,
+        "citation_validity": 1.0,
+        "prompt_tokens": 1373.4902,
+        "token_savings_pct": 91.1722,
+        "latency_ms": 0.804
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.0455,
+          "answer_recall": 0.0758,
+          "citation_f1": 0.1364,
+          "citation_recall": 0.1364,
+          "retrieval_recall": 0.1364
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.0,
+          "answer_recall": 0.0167,
+          "citation_f1": 0.0,
+          "citation_recall": 0.0,
+          "retrieval_recall": 0.0
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 0.5,
+          "answer_recall": 0.5312,
+          "citation_f1": 0.65,
+          "citation_recall": 0.625,
+          "retrieval_recall": 1.0
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.0,
+          "answer_recall": 0.0204,
+          "citation_f1": 0.0,
+          "citation_recall": 0.0,
+          "retrieval_recall": 0.0
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.05,
+          "answer_recall": 0.0583,
+          "citation_f1": 0.0,
+          "citation_recall": 0.0,
+          "retrieval_recall": 0.05
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.0455,
+          "answer_recall": 0.3394,
+          "citation_f1": 0.0909,
+          "citation_recall": 0.0909,
+          "retrieval_recall": 0.1364
+        }
+      }
+    },
+    "baseline_summary": {
+      "label": "2. Rolling Session Summarization",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.1225,
+        "answer_recall": 0.1974,
+        "token_f1": 0.0202,
+        "citation_recall": 0.0572,
+        "citation_precision": 0.0817,
+        "citation_f1": 0.0621,
+        "retrieval_recall": 0.131,
+        "session_provenance_hit": 0.3039,
+        "citation_validity": 1.0,
+        "prompt_tokens": 1335.098,
+        "token_savings_pct": 91.8382,
+        "latency_ms": 0.685
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.0455,
+          "answer_recall": 0.1076,
+          "citation_f1": 0.0909,
+          "citation_recall": 0.0909,
+          "retrieval_recall": 0.0909
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.2,
+          "answer_recall": 0.1067,
+          "citation_f1": 0.0667,
+          "citation_recall": 0.05,
+          "retrieval_recall": 0.2
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 0.25,
+          "answer_recall": 0.25,
+          "citation_f1": 0.2917,
+          "citation_recall": 0.25,
+          "retrieval_recall": 0.375
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.025,
+          "answer_recall": 0.0713,
+          "citation_f1": 0.0167,
+          "citation_recall": 0.0167,
+          "retrieval_recall": 0.0683
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.15,
+          "answer_recall": 0.1706,
+          "citation_f1": 0.0,
+          "citation_recall": 0.0,
+          "retrieval_recall": 0.05
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.1818,
+          "answer_recall": 0.4485,
+          "citation_f1": 0.0455,
+          "citation_recall": 0.0455,
+          "retrieval_recall": 0.1818
+        }
+      }
+    },
+    "baseline_naive_rag": {
+      "label": "3. Standard Dense Vector RAG (Raw Turns)",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.2402,
+        "answer_recall": 0.3501,
+        "token_f1": 0.0488,
+        "citation_recall": 0.3341,
+        "citation_precision": 0.299,
+        "citation_f1": 0.3002,
+        "retrieval_recall": 0.4175,
+        "session_provenance_hit": 0.6078,
+        "citation_validity": 1.0,
+        "prompt_tokens": 484.8431,
+        "token_savings_pct": 96.2898,
+        "latency_ms": 2.1527
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.0,
+          "answer_recall": 0.3485,
+          "citation_f1": 0.2803,
+          "citation_recall": 0.3636,
+          "retrieval_recall": 0.4091
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.3,
+          "answer_recall": 0.14,
+          "citation_f1": 0.2233,
+          "citation_recall": 0.25,
+          "retrieval_recall": 0.3
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 0.375,
+          "answer_recall": 0.4062,
+          "citation_f1": 0.5667,
+          "citation_recall": 0.5625,
+          "retrieval_recall": 0.9375
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.175,
+          "answer_recall": 0.2058,
+          "citation_f1": 0.1176,
+          "citation_recall": 0.1042,
+          "retrieval_recall": 0.2042
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.25,
+          "answer_recall": 0.2622,
+          "citation_f1": 0.125,
+          "citation_recall": 0.15,
+          "retrieval_recall": 0.25
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.4545,
+          "answer_recall": 0.6379,
+          "citation_f1": 0.5833,
+          "citation_recall": 0.6364,
+          "retrieval_recall": 0.6364
+        }
+      }
+    },
+    "smriti_full": {
+      "label": "4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.6275,
+        "answer_recall": 0.5747,
+        "token_f1": 0.0544,
+        "citation_recall": 0.5608,
+        "citation_precision": 0.426,
+        "citation_f1": 0.4334,
+        "retrieval_recall": 0.6792,
+        "session_provenance_hit": 0.8137,
+        "citation_validity": 1.0,
+        "prompt_tokens": 1477.3333,
+        "token_savings_pct": 86.1436,
+        "latency_ms": 31.2399
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.5,
+          "answer_recall": 0.453,
+          "citation_f1": 0.4606,
+          "citation_recall": 0.6818,
+          "retrieval_recall": 0.8182
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.4,
+          "answer_recall": 0.2067,
+          "citation_f1": 0.18,
+          "citation_recall": 0.25,
+          "retrieval_recall": 0.25
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 1.0,
+          "answer_recall": 0.9688,
+          "citation_f1": 0.9167,
+          "citation_recall": 0.875,
+          "retrieval_recall": 1.0
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.6,
+          "answer_recall": 0.4171,
+          "citation_f1": 0.2136,
+          "citation_recall": 0.235,
+          "retrieval_recall": 0.2892
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.65,
+          "answer_recall": 0.6032,
+          "citation_f1": 0.325,
+          "citation_recall": 0.65,
+          "retrieval_recall": 0.75
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.7273,
+          "answer_recall": 0.8379,
+          "citation_f1": 0.6439,
+          "citation_recall": 0.6818,
+          "retrieval_recall": 0.9091
+        }
+      }
+    },
+    "ablation_no_dream_wiki": {
+      "label": "5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.5833,
+        "answer_recall": 0.5362,
+        "token_f1": 0.0483,
+        "citation_recall": 0.5444,
+        "citation_precision": 0.4036,
+        "citation_f1": 0.4234,
+        "retrieval_recall": 0.7136,
+        "session_provenance_hit": 0.7941,
+        "citation_validity": 1.0,
+        "prompt_tokens": 1345.2353,
+        "token_savings_pct": 88.801,
+        "latency_ms": 26.2147
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.5,
+          "answer_recall": 0.453,
+          "citation_f1": 0.4546,
+          "citation_recall": 0.6818,
+          "retrieval_recall": 0.8182
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.4,
+          "answer_recall": 0.2317,
+          "citation_f1": 0.17,
+          "citation_recall": 0.25,
+          "retrieval_recall": 0.3
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 0.5,
+          "answer_recall": 0.5312,
+          "citation_f1": 0.7042,
+          "citation_recall": 0.6875,
+          "retrieval_recall": 1.0
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.475,
+          "answer_recall": 0.3663,
+          "citation_f1": 0.1592,
+          "citation_recall": 0.1767,
+          "retrieval_recall": 0.3392
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.65,
+          "answer_recall": 0.5865,
+          "citation_f1": 0.3333,
+          "citation_recall": 0.65,
+          "retrieval_recall": 0.8
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.8182,
+          "answer_recall": 0.8682,
+          "citation_f1": 0.7273,
+          "citation_recall": 0.7273,
+          "retrieval_recall": 0.9545
+        }
+      }
+    },
+    "ablation_no_temporal": {
+      "label": "6. Ablation: w/o Relative-to-Absolute Temporal Anchoring",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.4559,
+        "answer_recall": 0.41,
+        "token_f1": 0.0448,
+        "citation_recall": 0.5436,
+        "citation_precision": 0.4224,
+        "citation_f1": 0.4272,
+        "retrieval_recall": 0.6098,
+        "session_provenance_hit": 0.7843,
+        "citation_validity": 1.0,
+        "prompt_tokens": 1473.9314,
+        "token_savings_pct": 86.1469,
+        "latency_ms": 28.7964
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.5,
+          "answer_recall": 0.453,
+          "citation_f1": 0.4682,
+          "citation_recall": 0.6818,
+          "retrieval_recall": 0.7273
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.4,
+          "answer_recall": 0.2067,
+          "citation_f1": 0.18,
+          "citation_recall": 0.25,
+          "retrieval_recall": 0.25
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 1.0,
+          "answer_recall": 0.9688,
+          "citation_f1": 0.9167,
+          "citation_recall": 0.875,
+          "retrieval_recall": 1.0
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.475,
+          "answer_recall": 0.3504,
+          "citation_f1": 0.2205,
+          "citation_recall": 0.2475,
+          "retrieval_recall": 0.235
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.55,
+          "answer_recall": 0.5265,
+          "citation_f1": 0.3033,
+          "citation_recall": 0.6,
+          "retrieval_recall": 0.6
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.1364,
+          "answer_recall": 0.2045,
+          "citation_f1": 0.6212,
+          "citation_recall": 0.6364,
+          "retrieval_recall": 0.8636
+        }
+      }
+    },
+    "ablation_dense_only": {
+      "label": "7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only)",
+      "num_questions": 102,
+      "overall": {
+        "judge_score": 0.6029,
+        "answer_recall": 0.5358,
+        "token_f1": 0.0536,
+        "citation_recall": 0.5011,
+        "citation_precision": 0.3859,
+        "citation_f1": 0.3987,
+        "retrieval_recall": 0.6479,
+        "session_provenance_hit": 0.7745,
+        "citation_validity": 1.0,
+        "prompt_tokens": 1469.6765,
+        "token_savings_pct": 86.1429,
+        "latency_ms": 27.0357
+      },
+      "per_category": {
+        "Adversarial / Abstention": {
+          "count": 22,
+          "judge_score": 0.5,
+          "answer_recall": 0.4303,
+          "citation_f1": 0.4152,
+          "citation_recall": 0.5909,
+          "retrieval_recall": 0.8182
+        },
+        "Inference / Commonsense": {
+          "count": 10,
+          "judge_score": 0.35,
+          "answer_recall": 0.2067,
+          "citation_f1": 0.13,
+          "citation_recall": 0.2,
+          "retrieval_recall": 0.25
+        },
+        "Knowledge Update (Bi-Temporal)": {
+          "count": 8,
+          "judge_score": 1.0,
+          "answer_recall": 0.9688,
+          "citation_f1": 0.9167,
+          "citation_recall": 0.875,
+          "retrieval_recall": 1.0
+        },
+        "Multi-Hop Synthesis": {
+          "count": 20,
+          "judge_score": 0.575,
+          "answer_recall": 0.3608,
+          "citation_f1": 0.2283,
+          "citation_recall": 0.2558,
+          "retrieval_recall": 0.2792
+        },
+        "Single-Hop Recall": {
+          "count": 20,
+          "judge_score": 0.575,
+          "answer_recall": 0.5143,
+          "citation_f1": 0.2833,
+          "citation_recall": 0.5,
+          "retrieval_recall": 0.6
+        },
+        "Temporal Reasoning": {
+          "count": 22,
+          "judge_score": 0.7273,
+          "answer_recall": 0.8121,
+          "citation_f1": 0.5758,
+          "citation_recall": 0.6364,
+          "retrieval_recall": 0.9091
+        }
+      }
+    }
+  }
+}

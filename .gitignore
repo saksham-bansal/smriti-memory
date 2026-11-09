@@ -11,10 +11,11 @@ env/
 # Environment variables & secrets
 .env
 
-# Temporary runtime databases (except committed demo/eval artifacts)
+# Temporary runtime databases & local video recordings (except committed demo/eval artifacts)
 *.db
 *.db-shm
 *.db-wal
+*.mp4
 data/locomo10.json
 /tmp_*/
 .pytest_cache/

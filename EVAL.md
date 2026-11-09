@@ -62,64 +62,64 @@ All baselines and `Smriti` variants operate under the **exact same context token
 
 ---
 
-## 4. Main Results & Ablation Study
+## 4. Main Results & Ablation Study (Evaluated with `gemini-3.1-flash-lite`)
 
 ### Table 1: Overall Benchmark Performance ($N = 102$ Questions across 42 Sessions / 800 Turns, Budget $B = 1,500$ Tokens)
 
 | System / Configuration | Answer Judge Score (%) | Answer Token Recall (%) | Provenance Citation F1 (%) | Provenance Citation Recall (%) | Context Retrieval Recall@k (%) | Citation Validity (%) | Mean Prompt Tokens | Token Savings vs. Full Replay (%) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1. Sliding-Window Recency Buffer | 6.9% | 14.8% | 10.0% | 9.8% | 14.7% | 100.0% | 1373 | 91.2% |
-| 2. Rolling Session Summarization | 12.2% | 19.7% | 6.2% | 5.7% | 13.1% | 100.0% | 1335 | 91.8% |
-| 3. Standard Dense Vector RAG (Raw Turns) | 24.0% | 35.0% | 30.0% | 33.4% | 41.8% | 100.0% | 485 | 96.3% |
-| **4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)** | **62.7%** | **57.5%** | **43.3%** | **56.1%** | **67.9%** | **100.0%** | **1477** | **86.1%** |
-| 5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession | 58.3% | 53.6% | 42.3% | 54.4% | 71.4% | 100.0% | 1345 | 88.8% |
-| 6. Ablation: w/o Relative-to-Absolute Temporal Anchoring | 45.6% | 41.0% | 42.7% | 54.4% | 61.0% | 100.0% | 1474 | 86.1% |
-| 7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only) | 60.3% | 53.6% | 39.9% | 50.1% | 64.8% | 100.0% | 1470 | 86.1% |
+| 1. Sliding-Window Recency Buffer | 24.5% | 20.1% | 10.5% | 9.3% | 14.7% | 100.0% | 1373 | 91.2% |
+| 2. Rolling Session Summarization | 28.9% | 22.5% | 6.8% | 6.5% | 13.1% | 100.0% | 1335 | 91.8% |
+| 3. Standard Dense Vector RAG (Raw Turns) | 42.6% | 34.9% | 30.4% | 30.0% | 41.8% | 100.0% | 485 | 96.3% |
+| **4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)** | **67.2%** | **52.2%** | **43.3%** | **54.4%** | **67.9%** | **100.0%** | **1477** | **86.1%** |
+| 5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession | 62.7% | 47.9% | 42.4% | 55.4% | 71.4% | 100.0% | 1352 | 88.6% |
+| 6. Ablation: w/o Relative-to-Absolute Temporal Anchoring | 53.4% | 38.2% | 41.4% | 50.9% | 61.0% | 100.0% | 1474 | 86.1% |
+| 7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only) | 63.7% | 48.4% | 38.6% | 46.7% | 64.8% | 100.0% | 1470 | 86.1% |
 
 ### Table 2: Per-Category Judge Accuracy Breakdown (%)
 
 | System / Configuration | Single-Hop | Multi-Hop | Temporal | Inference | Adversarial Abstention | Bi-Temporal Update |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1. Sliding-Window Recency Buffer | 5.0% | 0.0% | 4.5% | 0.0% | 4.5% | 50.0% |
-| 2. Rolling Session Summarization | 15.0% | 2.5% | 18.2% | 20.0% | 4.5% | 25.0% |
-| 3. Standard Dense Vector RAG (Raw Turns) | 25.0% | 17.5% | 45.5% | 30.0% | 0.0% | 37.5% |
-| **4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)** | **65.0%** | **60.0%** | **72.7%** | **40.0%** | **50.0%** | **100.0%** |
-| 5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession | 65.0% | 47.5% | 81.8% | 40.0% | 50.0% | 50.0% |
-| 6. Ablation: w/o Relative-to-Absolute Temporal Anchoring | 55.0% | 47.5% | 13.6% | 40.0% | 50.0% | 100.0% |
-| 7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only) | 57.5% | 57.5% | 72.7% | 35.0% | 50.0% | 100.0% |
+| 1. Sliding-Window Recency Buffer | 5.0% | 5.0% | 13.6% | 10.0% | 50.0% | 100.0% |
+| 2. Rolling Session Summarization | 15.0% | 17.5% | 22.7% | 10.0% | 54.5% | 62.5% |
+| 3. Standard Dense Vector RAG (Raw Turns) | 15.0% | 25.0% | 59.1% | 25.0% | 63.6% | 75.0% |
+| **4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)** | **60.0%** | **55.0%** | **86.4%** | **10.0%** | **81.8%** | **93.8%** |
+| 5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession | 60.0% | 37.5% | 86.4% | 10.0% | 86.4% | 68.8% |
+| 6. Ablation: w/o Relative-to-Absolute Temporal Anchoring | 55.0% | 47.5% | 27.3% | 30.0% | 77.3% | 100.0% |
+| 7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only) | 52.5% | 55.0% | 72.7% | 35.0% | 72.7% | 100.0% |
 
 ### Table 3: Per-Category Ground-Truth Provenance Citation Recall (%)
 
 | System / Configuration | Single-Hop | Multi-Hop | Temporal | Inference | Adversarial | Bi-Temporal Update |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1. Sliding-Window Recency Buffer | 0.0% | 0.0% | 9.1% | 0.0% | 13.6% | 62.5% |
-| 2. Rolling Session Summarization | 0.0% | 1.7% | 4.5% | 5.0% | 9.1% | 25.0% |
-| 3. Standard Dense Vector RAG (Raw Turns) | 15.0% | 10.4% | 63.6% | 25.0% | 36.4% | 56.2% |
-| **4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)** | **65.0%** | **23.5%** | **68.2%** | **25.0%** | **68.2%** | **87.5%** |
-| 5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession | 65.0% | 17.7% | 72.7% | 25.0% | 68.2% | 68.8% |
-| 6. Ablation: w/o Relative-to-Absolute Temporal Anchoring | 60.0% | 24.8% | 63.6% | 25.0% | 68.2% | 87.5% |
-| 7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only) | 50.0% | 25.6% | 63.6% | 20.0% | 59.1% | 87.5% |
+| 1. Sliding-Window Recency Buffer | 5.0% | 0.0% | 9.1% | 0.0% | 9.1% | 56.2% |
+| 2. Rolling Session Summarization | 0.0% | 2.9% | 9.1% | 0.0% | 9.1% | 25.0% |
+| 3. Standard Dense Vector RAG (Raw Turns) | 15.0% | 17.9% | 63.6% | 15.0% | 18.2% | 56.2% |
+| **4. Smriti (Full 4-Layer + Dreaming + Bi-Temporal + Hybrid RRF)** | **60.0%** | **27.7%** | **77.3%** | **20.0%** | **54.5%** | **87.5%** |
+| 5. Ablation: w/o Offline Dreaming, Wikis & Bi-Temporal Supersession | 60.0% | 27.7% | 81.8% | 25.0% | 54.5% | 81.2% |
+| 6. Ablation: w/o Relative-to-Absolute Temporal Anchoring | 55.0% | 22.2% | 63.6% | 25.0% | 59.1% | 87.5% |
+| 7. Ablation: w/o Hybrid BM25 & Entity Graph (Dense Only) | 45.0% | 23.1% | 63.6% | 20.0% | 50.0% | 87.5% |
 
 ---
 
 ## 5. Analysis of Results & Architectural Ablations
 
-1. **`Smriti` vs. Standard Baselines (+38.7% Judge Accuracy, +22.7% Provenance Citation Recall over Naive RAG)**:
-   - **Sliding-Window Recency (`6.9%`)** fails on any question referencing Sessions 1–16 because its 1,500-token tail window only covers the final 2–3 sessions.
-   - **Rolling Session Summarization (`12.2%`, `5.7%` Citation Recall)** suffers from severe lossy compression: keeping 2 summary snippets per session drops 85% of specific entities, book titles, and dates, and destroys fine-grained turn provenance.
-   - **Standard Dense Vector RAG (`24.0%` Judge Acc, `33.4%` Citation Recall)** retrieves raw turns without pronoun/question de-contextualization or relative-date anchoring, failing on elliptical replies (e.g., `D7:11` *"Becoming Nicole"*), state updates (`37.5%`), and adversarial speaker swaps (`0.0%`).
-   - **`Smriti (Full)` (`62.7%` Judge Acc, `56.1%` Citation Recall, `67.9%` Retrieval Recall@k)** achieves a **2.6x improvement in Judge Accuracy** over Naive Dense RAG while compressing prompt tokens by **86.1%** compared to full transcript replay.
+1. **`Smriti` vs. Standard Baselines (+24.6% Judge Accuracy, +24.4% Provenance Citation Recall over Naive Dense RAG)**:
+   - **Sliding-Window Recency (`24.5%` Judge Acc, `9.3%` Citation Recall)** fails on almost any question referencing Sessions 1–16 (`5.0%` Single-Hop, `5.0%` Multi-Hop) because its 1,500-token tail window only covers the final 2–3 sessions (though `gemini-3.1-flash-lite` correctly abstains on 50% of adversarial questions when the context lacks the queried premise).
+   - **Rolling Session Summarization (`28.9%` Judge Acc, `6.5%` Citation Recall)** suffers from severe lossy compression: keeping 2 summary snippets per session drops 85% of specific entities, book titles, and dates, and destroys fine-grained turn provenance.
+   - **Standard Dense Vector RAG (`42.6%` Judge Acc, `30.0%` Citation Recall)** retrieves raw turns without pronoun/question de-contextualization or relative-date anchoring, scoring only `15.0%` on Single-Hop Recall (due to elliptical replies like `D7:11` *"Becoming Nicole"*) and `25.0%` on Multi-Hop Synthesis.
+   - **`Smriti (Full)` (`67.2%` Judge Acc, `54.4%` Citation Recall, `67.9%` Retrieval Recall@k)** achieves a **+24.6 percentage point improvement in Judge Accuracy** (`4.0x` on Single-Hop, `2.2x` on Multi-Hop, `+27.3%` on Temporal Reasoning, and `+18.2%` on Adversarial Abstention) over Standard Dense RAG while compressing prompt tokens by **86.1%** compared to full transcript replay.
 
-2. **Ablation 1 — Removing Offline Dreaming, Linked Wikis & Bi-Temporal Supersession (`62.7% -> 58.3%`)**:
-   - Disabling `DreamEngine` causes **Bi-Temporal Knowledge Update accuracy to drop by 50.0 percentage points (`100.0% -> 50.0%`)** and **Multi-Hop Synthesis accuracy to drop by 12.5 percentage points (`60.0% -> 47.5%`)**, while Multi-Hop Provenance Citation Recall drops from `23.5% -> 17.7%`.
-   - *Interesting Tradeoff Observed*: Without Dreaming, Temporal Reasoning is slightly higher (`81.8%` vs. `72.7%`, a difference of 2 questions out of 22) and raw turn Retrieval Recall@k is `71.4%` vs `67.9%`, because Layer 4 (`global.md`) and Layer 3 (`WikiPage` snippets) consume ~300 tokens of the 1,500-token budget and `drm_link_` claims occasionally rank ahead of a single-hop temporal claim. Overall, Dreaming yields a net **+4.4% aggregate gain** and is essential for multi-hop and state-mutation consistency.
+2. **Ablation 1 — Removing Offline Dreaming, Linked Wikis & Bi-Temporal Supersession (`67.2% -> 62.7%`)**:
+   - Disabling `DreamEngine` and slot supersession causes **Bi-Temporal Knowledge Update accuracy to drop by 25.0 percentage points (`93.8% -> 68.8%`)** and **Multi-Hop Synthesis accuracy to drop by 17.5 percentage points (`55.0% -> 37.5%`)**, while Bi-Temporal Provenance Citation Recall drops from `87.5% -> 81.2%`.
+   - *Interesting Tradeoff Observed*: Without Layer 3 (`WikiPage`) and Layer 4 (`global.md`) headers occupying ~125 tokens of the 1,500-token budget, raw turn Retrieval Recall@k is slightly higher (`71.4%` vs `67.9%`), but without compiled cross-session entity profiles and `[ACTIVE]`/`[SUPERSEDED]` markers, `gemini-3.1-flash-lite` struggles to synthesize multi-session state transitions, yielding a net **+4.5% aggregate gain** for full `Smriti`.
 
-3. **Ablation 2 — Removing Relative-to-Absolute Temporal Anchoring (`62.7% -> 45.6%`)**:
-   - Disabling `TemporalNormalizer` causes **Temporal Reasoning accuracy to collapse from `72.7%` to `13.6%` (-59.1 percentage points)** and overall Judge Accuracy to drop by **17.1 points**.
-   - Without ingestion-time anchoring (`"yesterday"` $\rightarrow$ `"5 July 2023"`, `"two weekends ago"` $\rightarrow$ `"two weekends before 17 July 2023"`, `"Seven years now"` $\rightarrow$ `"7 years (Since 2016)"`), the agent can only report the session timestamp rather than the true event date.
+3. **Ablation 2 — Removing Relative-to-Absolute Temporal Anchoring (`67.2% -> 53.4%`)**:
+   - Disabling `TemporalNormalizer` causes **Temporal Reasoning accuracy to collapse from `86.4%` to `27.3%` (-59.1 percentage points)** and overall Judge Accuracy to drop by **13.8 percentage points**.
+   - Without ingestion-time anchoring (`"yesterday"` $\rightarrow$ `"5 July 2023"`, `"two weekends ago"` $\rightarrow$ `"two weekends before 17 July 2023"`, `"Seven years now"` $\rightarrow$ `"7 years (Since 2016)"`), the LLM frequently reports the unanchored session timestamp or raw relative phrase rather than the resolved event date.
 
-4. **Ablation 3 — Removing Hybrid FTS5 BM25 & Entity Graph (`62.7% -> 60.3%`, Citation Recall `56.1% -> 50.1%`)**:
-   - Relying on dense embeddings alone drops **Single-Hop Provenance Citation Recall by 15.0 percentage points (`65.0% -> 50.0%`)** and overall Citation F1 from `43.3% -> 39.9%`, proving that exact BM25 lexical matching + 1-hop entity graph expansion is vital for pinpointing rare proper nouns and exact turn IDs.
+4. **Ablation 3 — Removing Hybrid FTS5 BM25 & Entity Graph (`67.2% -> 63.7%`, Citation Recall `54.4% -> 46.7%`)**:
+   - Relying on dense embeddings alone drops **Single-Hop Provenance Citation Recall by 15.0 percentage points (`60.0% -> 45.0%`)**, **Temporal Reasoning accuracy by 13.7 percentage points (`86.4% -> 72.7%`)**, and overall Citation F1 from `43.3% -> 38.6%`, proving that exact BM25 lexical matching + 1-hop entity graph expansion is vital for pinpointing rare proper nouns and exact turn IDs.
 
 ---
 
@@ -127,23 +127,25 @@ All baselines and `Smriti` variants operate under the **exact same context token
 
 Inspecting the raw predictions in [`artifacts/eval_results/raw_predictions.jsonl`](file:///Users/palakbansal/.gemini/antigravity/scratch/smriti-memory/artifacts/eval_results/raw_predictions.jsonl) highlights four concrete failure modes in `Smriti`:
 
-### Failure Case 1: World-Knowledge Gap on Commonsense Inference (`conv-26_q61`, Category 3)
-- **Question**: *"Would Caroline likely have Dr. Seuss books on her bookshelf?"*
-- **Ground Truth (`D6:9`)**: *"Yes, since she collects classic children's books"*
-- **`Smriti` Output**: `Abstained: The requested topic or detail was not mentioned in any past interaction.` (`judge_score: 0.0`)
-- **Why It Failed**: The token `"Seuss"` never appears anywhere in the 19 sessions of `conv-26`. Answering requires external world knowledge (*Dr. Seuss is an author of classic children's books*) to bridge the query term `"Dr. Seuss"` to `D6:9` (*"classic children's books"*), causing our strict unmentioned-topic guard to abstain rather than guess.
+### Failure Case 1: World-Knowledge Gap Under Strict Grounding Rules (`conv-26_q64`, Category 3 Inference)
+- **Question**: *"Would Melanie likely enjoy the song 'The Four Seasons' by Vivaldi?"*
+- **Ground Truth (`D15:28`)**: *"Yes; it's classical music"*
+- **`Smriti` Output**: `The provided memory context does not contain information regarding Melanie's preference for Vivaldi's "The Four Seasons."` (`abstained: True`, `judge_score: 0.0`)
+- **Why It Failed**: The tokens `"Vivaldi"` and `"Four Seasons"` never appear anywhere in `conv-26` (Melanie only says she enjoys *"classical music"* in `D15:28`). Answering requires external world knowledge (*Vivaldi's The Four Seasons is classical music*) plus speculative inference, which conflicts with `Smriti`'s strict anti-hallucination prompt instructing `gemini-3.1-flash-lite` to abstain when a queried entity is absent from the retrieved evidence.
 
-### Failure Case 2: Multi-Session Aggregative Counting (`conv-26_q42`, Category 1 Multi-Hop)
+### Failure Case 2: Stated Frequency Rule vs. Multi-Session Event Counting (`conv-26_q40`, Category 1 Multi-Hop)
 - **Question**: *"How many times has Melanie gone to the beach in 2023?"*
 - **Ground Truth (`D10:8`, `D6:16`)**: `2`
-- **`Smriti` Output**: Retrieves both `D10:8` and `D6:16` in `retrieved_turn_ids` (`['D10:10', 'D4:6', 'D10:8', 'D6:16']`), and cites `['D10:10', 'D10:8']`, quoting Melanie saying *"usually only once or twice a year"*, but does not perform arithmetic aggregation over distinct beach trips across Sessions 6 and 10 (`judge_score: 0.0`).
+- **`Smriti` Output**: `Melanie typically visits the beach only once or twice a year [D10:10].` (`cited_turn_ids: ['D10:10', 'D10:18']`, `retrieved_turn_ids: ['D10:10', 'D10:18', 'D10:8', 'D6:16', 'D4:6', 'D18:15']`, `judge_score: 0.0`)
+- **Why It Failed**: Even though `Smriti` retrieves both ground-truth beach-trip turns (`D10:8` and `D6:16`) into the context window, turn `D10:10` explicitly states *"We don't go often, usually only once or twice a year"*, causing the LLM to report Melanie's stated frequency rule rather than enumerating distinct beach trips across Sessions 6 and 10.
 
-### Failure Case 3: Subtle Adversarial Premise with Shared Speaker Vocabulary (`conv-26_q119`, Category 5 Adversarial)
-- **Question**: *"What instrument does Melanie's brother play?"*
-- **Ground Truth**: Adversarial False Premise (Melanie plays the clarinet/violin and talks about her kids/sister; she never mentions a brother playing an instrument).
-- **`Smriti` Output**: Because **Melanie** herself discusses playing instruments across multiple turns (`D2:5`, `D6:14`), the speaker-attribution guard sees `target_speaker = Melanie` asserting instrument-related stems (`target_assertions > 0`) and fails to recognize that the relationship modifier (*"Melanie's brother"*) is the fabricated part of the premise (`abstained: False`, `judge_score: 0.0`).
+### Failure Case 3: Subtle Adversarial Premise with Incidental Visual Vocabulary Overlap (`conv-30_q99`, Category 5 Adversarial)
+- **Question**: *"What book is Gina currently reading?"*
+- **Ground Truth (`D12:6`)**: Adversarial False Premise (**Jon** is reading *"The Lean Startup"*, not **Gina**).
+- **`Smriti` Output**: Cites `D12:6` and `D6:6` without abstaining (`abstained: False`, `judge_score: 0.0`).
+- **Why It Failed**: In turn `D6:6`, **Gina** shares an image captioned `[Shared Image: a photo of a computer screen showing a book and a pair of shoes]`. Because `target_speaker = Gina` has lexical overlap with the stem `"book"` in `D6:6`, the speaker-attribution mismatch guard does not flag the query as a pure speaker swap.
 
-### Failure Case 4: Cross-Turn Relative Year Resolution (`conv-26_q49`, Category 2 Temporal)
-- **Question**: *"When did Caroline and Melanie go to a pride festival together?"*
+### Failure Case 4: Cross-Turn Relative Year Resolution with Misspelled Query Token (`conv-26_q49`, Category 2 Temporal)
+- **Question**: *"When did Caroline and Melanie go to a pride fesetival together?"*
 - **Ground Truth (`D12:15`)**: `2022`
-- **`Smriti` Output**: Retrieves `D5:1` (a 2023 pride parade turn) and `D10:10` ahead of `D12:15` because `D12:15` refers to the event elliptically as *"last year's festival"* without repeating both speaker names (`judge_score: 0.0`).
+- **`Smriti` Output**: Retrieves `D10:10` and `D5:1` (a 2023 pride parade turn) ahead of `D12:15` because the benchmark question misspells *"festival"* as `"fesetival"` and `D12:15` refers to the event elliptically without repeating both speaker names (`judge_score: 0.0`).

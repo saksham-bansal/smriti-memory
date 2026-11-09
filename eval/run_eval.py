@@ -9,8 +9,10 @@ Satisfies Hard Requirement 3 & 4:
   - Computes aggregate & per-category tables in `artifacts/eval_results/summary_metrics.json`
 """
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import json
 import tempfile
+import threading
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List
@@ -189,34 +191,62 @@ def run_evaluation(manifest_path: Path, output_dir: Path, token_budget: int = 15
                     runner = RecencyBufferBaseline(token_budget=token_budget)
                     for s in sessions:
                         runner.ingest_session(s)
-                    for qa in qa_list:
+
+                    def _eval_recency(qa: Dict[str, Any]) -> Dict[str, Any]:
                         resp = runner.answer_query(conv_id, qa["question"])
                         rec = evaluate_single_prediction(qa, resp, full_tok)
                         rec["system_id"] = sys_id
                         rec["system_label"] = sys_label
-                        sys_records.append(rec)
+                        return rec
+
+                    with ThreadPoolExecutor(max_workers=4) as pool:
+                        sys_records.extend(list(pool.map(_eval_recency, qa_list)))
 
                 elif sys_id == "baseline_summary":
                     runner = RollingSummaryBaseline(token_budget=token_budget)
                     for s in sessions:
                         runner.ingest_session(s)
-                    for qa in qa_list:
+
+                    def _eval_summary(qa: Dict[str, Any]) -> Dict[str, Any]:
                         resp = runner.answer_query(conv_id, qa["question"])
                         rec = evaluate_single_prediction(qa, resp, full_tok)
                         rec["system_id"] = sys_id
                         rec["system_label"] = sys_label
-                        sys_records.append(rec)
+                        return rec
+
+                    with ThreadPoolExecutor(max_workers=4) as pool:
+                        sys_records.extend(list(pool.map(_eval_summary, qa_list)))
 
                 elif sys_id == "baseline_naive_rag":
                     runner = NaiveDenseRAGBaseline(token_budget=token_budget)
                     for s in sessions:
                         runner.ingest_session(s)
-                    for qa in qa_list:
-                        resp = runner.answer_query(conv_id, qa["question"])
+                    rag_lock = threading.Lock()
+
+                    def _eval_rag(qa: Dict[str, Any]) -> Dict[str, Any]:
+                        with rag_lock:
+                             hits = runner.vector_index.search(conv_id, "turn", qa["question"], top_k=10)
+                             turn_ids = [tid for tid, _ in hits]
+                             turns = runner.store.get_turns_by_ids(conv_id, turn_ids)
+                             all_turns = runner.store.get_all_turns(conv_id)
+                        packed = []
+                        used = 0
+                        for t in turns:
+                            cost = estimate_tokens(f"[{t.turn_id}] ({t.timestamp}) {t.speaker}: {t.text}")
+                            if used + cost > token_budget and packed:
+                                break
+                            packed.append(t)
+                            used += cost
+                        known_entities = sorted({t.speaker for t in all_turns})
+                        from eval.baselines import _baseline_synthesize_from_turns
+                        resp = _baseline_synthesize_from_turns(qa["question"], packed, known_entities, runner.llm)
                         rec = evaluate_single_prediction(qa, resp, full_tok)
                         rec["system_id"] = sys_id
                         rec["system_label"] = sys_label
-                        sys_records.append(rec)
+                        return rec
+
+                    with ThreadPoolExecutor(max_workers=4) as pool:
+                        sys_records.extend(list(pool.map(_eval_rag, qa_list)))
 
                 else:
                     # Smriti Full or Ablation Variant: test real persistence across close & reopen!
@@ -228,17 +258,20 @@ def run_evaluation(manifest_path: Path, output_dir: Path, token_budget: int = 15
                         ingestor_agent.dream(conv_id)
                     ingestor_agent.close()
 
-                    # Re-open from persisted SQLite file to verify cross-restart persistence
-                    query_agent = _build_smriti_variant(sys_id, db_file, token_budget)
-                    try:
-                        for qa in qa_list:
-                            resp = query_agent.answer_query(conv_id, qa["question"])
+                    # Re-open from persisted SQLite file per worker to verify cross-restart persistence
+                    def _eval_smriti(qa: Dict[str, Any]) -> Dict[str, Any]:
+                        q_agent = _build_smriti_variant(sys_id, db_file, token_budget)
+                        try:
+                            resp = q_agent.answer_query(conv_id, qa["question"])
                             rec = evaluate_single_prediction(qa, resp, full_tok)
                             rec["system_id"] = sys_id
                             rec["system_label"] = sys_label
-                            sys_records.append(rec)
-                    finally:
-                        query_agent.close()
+                            return rec
+                        finally:
+                            q_agent.close()
+
+                    with ThreadPoolExecutor(max_workers=4) as pool:
+                        sys_records.extend(list(pool.map(_eval_smriti, qa_list)))
 
             all_raw_records.extend(sys_records)
             agg = aggregate_records(sys_records, sys_label)

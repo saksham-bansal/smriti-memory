@@ -10,6 +10,7 @@ import json
 import os
 import re
 import sqlite3
+import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -37,7 +38,9 @@ class LLMClient:
             "SMRITI_LLM_CACHE", "artifacts/llm_cache.db"
         )
         Path(self.cache_path).parent.mkdir(parents=True, exist_ok=True)
+        self._lock = threading.Lock()
         self._cache_conn = sqlite3.connect(self.cache_path, check_same_thread=False)
+        self._cache_conn.execute("PRAGMA journal_mode=WAL;")
         self._cache_conn.execute(
             """
             CREATE TABLE IF NOT EXISTS llm_cache (
@@ -59,21 +62,23 @@ class LLMClient:
         )
 
     def _get_cached(self, key: str) -> Optional[str]:
-        row = self._cache_conn.execute(
-            "SELECT response_text FROM llm_cache WHERE cache_key = ?", (key,)
-        ).fetchone()
-        return row[0] if row else None
+        with self._lock:
+            row = self._cache_conn.execute(
+                "SELECT response_text FROM llm_cache WHERE cache_key = ?", (key,)
+            ).fetchone()
+            return row[0] if row else None
 
     def _set_cached(self, key: str, model: str, prompt: str, response: str) -> None:
         p_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
-        self._cache_conn.execute(
-            """
-            INSERT OR REPLACE INTO llm_cache (cache_key, model, prompt_hash, response_text, created_at)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (key, model, p_hash, response, time.time()),
-        )
-        self._cache_conn.commit()
+        with self._lock:
+            self._cache_conn.execute(
+                """
+                INSERT OR REPLACE INTO llm_cache (cache_key, model, prompt_hash, response_text, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (key, model, p_hash, response, time.time()),
+            )
+            self._cache_conn.commit()
 
     def generate(
         self,
@@ -83,7 +88,7 @@ class LLMClient:
         max_tokens: int = 1024,
         json_mode: bool = False,
     ) -> str:
-        model_id = self.config.llm_model if self.has_live_api else "deterministic-extractive-v1"
+        model_id = self.config.llm_model
         raw_key = f"{model_id}|{temperature}|{json_mode}|{system_prompt}|||{prompt}"
         cache_key = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
 
@@ -116,37 +121,42 @@ class LLMClient:
     ) -> Optional[str]:
         model = self.config.llm_model
         if not model.startswith("gemini"):
-            model = "gemini-2.5-flash"
+            model = "gemini-3.1-flash-lite"
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.config.gemini_api_key}"
+        gen_cfg: Dict[str, Any] = {
+            "temperature": temperature,
+            "maxOutputTokens": max_tokens,
+        }
+        if "gemini-3" in model or "gemini-2.5" in model:
+            gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
+        if json_mode:
+            gen_cfg["responseMimeType"] = "application/json"
+
         payload: Dict[str, Any] = {
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "temperature": temperature,
-                "maxOutputTokens": max_tokens,
-            },
+            "generationConfig": gen_cfg,
         }
         if system_prompt:
             payload["systemInstruction"] = {"parts": [{"text": system_prompt}]}
-        if json_mode:
-            payload["generationConfig"]["responseMimeType"] = "application/json"
 
-        for attempt in range(3):
+        for attempt in range(4):
             try:
-                r = requests.post(url, json=payload, timeout=45)
+                r = requests.post(url, json=payload, timeout=(4.5, 12.0))
                 if r.status_code == 200:
                     data = r.json()
                     candidates = data.get("candidates", [])
                     if candidates:
                         parts = candidates[0].get("content", {}).get("parts", [])
-                        if parts and "text" in parts[0]:
-                            return parts[0]["text"]
+                        for p in reversed(parts):
+                            if not p.get("thought") and "text" in p:
+                                return p["text"]
                 elif r.status_code in (429, 500, 503):
                     time.sleep(1.5 * (attempt + 1))
                     continue
                 else:
                     break
             except Exception:
-                time.sleep(1.0)
+                time.sleep(0.8)
         return None
 
     def _call_openai(

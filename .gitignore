@@ -11,8 +11,9 @@ env/
 # Environment variables & secrets
 .env
 
-# Temporary runtime databases & local video recordings (except committed demo/eval artifacts)
+# Temporary runtime databases & local video recordings (except committed LLM response cache)
 *.db
+!artifacts/llm_cache.db
 *.db-shm
 *.db-wal
 *.mp4

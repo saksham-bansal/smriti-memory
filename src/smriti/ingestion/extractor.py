@@ -250,41 +250,42 @@ class SessionIngestor:
 
             # Step 4: Check for explicit mutable state-slot claims (for bi-temporal supersession)
             slot_matched = False
-            for slot_category, pattern, pred_name in _MUTABLE_SLOT_PATTERNS:
-                for m in pattern.finditer(turn.text):
-                    slot_matched = True
-                    if m.lastindex and m.lastindex >= 2:
-                        sub_key = m.group(1).strip().lower()
-                        obj_val = m.group(2).strip()
-                        predicate = f"{pred_name}:{sub_key}"
-                    else:
-                        obj_val = m.group(1).strip()
-                        predicate = pred_name
+            if self.config.enable_supersession:
+                for slot_category, pattern, pred_name in _MUTABLE_SLOT_PATTERNS:
+                    for m in pattern.finditer(turn.text):
+                        slot_matched = True
+                        if m.lastindex and m.lastindex >= 2:
+                            sub_key = m.group(1).strip().lower()
+                            obj_val = m.group(2).strip()
+                            predicate = f"{pred_name}:{sub_key}"
+                        else:
+                            obj_val = m.group(1).strip()
+                            predicate = pred_name
 
-                    cid_seed = f"{session.conversation_id}|{turn.turn_id}|{predicate}|{obj_val}"
-                    claim_id = "clm_" + hashlib.md5(cid_seed.encode("utf-8")).hexdigest()[:12]
+                        cid_seed = f"{session.conversation_id}|{turn.turn_id}|{predicate}|{obj_val}"
+                        claim_id = "clm_" + hashlib.md5(cid_seed.encode("utf-8")).hexdigest()[:12]
 
-                    slot_statement = (
-                        f"[State Fact] {turn.speaker} {predicate.replace('_', ' ')} = '{obj_val}' "
-                        f"(as of {turn.timestamp}). Full context: {statement}"
-                    )
-                    slot_claim = AtomicClaim(
-                        claim_id=claim_id,
-                        conversation_id=session.conversation_id,
-                        subject=turn.speaker,
-                        predicate=predicate,
-                        object_value=obj_val,
-                        statement=slot_statement,
-                        source_turn_ids=list(source_tids),
-                        source_session_ids=[session.session_id],
-                        evidence_quotes=list(evidence_quotes),
-                        valid_from=turn.timestamp or session.timestamp,
-                        normalized_date=norm_date,
-                        status=ClaimStatus.ACTIVE.value,
-                        salience=0.95,
-                    )
-                    self._reconcile_and_save_claim(slot_claim)
-                    extracted_claims.append(slot_claim)
+                        slot_statement = (
+                            f"[State Fact] {turn.speaker} {predicate.replace('_', ' ')} = '{obj_val}' "
+                            f"(as of {turn.timestamp}). Full context: {statement}"
+                        )
+                        slot_claim = AtomicClaim(
+                            claim_id=claim_id,
+                            conversation_id=session.conversation_id,
+                            subject=turn.speaker,
+                            predicate=predicate,
+                            object_value=obj_val,
+                            statement=slot_statement,
+                            source_turn_ids=list(source_tids),
+                            source_session_ids=[session.session_id],
+                            evidence_quotes=list(evidence_quotes),
+                            valid_from=turn.timestamp or session.timestamp,
+                            normalized_date=norm_date,
+                            status=ClaimStatus.ACTIVE.value,
+                            salience=0.95,
+                        )
+                        self._reconcile_and_save_claim(slot_claim)
+                        extracted_claims.append(slot_claim)
 
             # Step 5: General atomic claim for the turn
             pred = _classify_predicate(turn.text)

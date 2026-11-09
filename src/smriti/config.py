@@ -41,7 +41,7 @@ class SmritiConfig:
         default_factory=lambda: os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     )
     llm_model: str = field(
-        default_factory=lambda: os.environ.get("SMRITI_LLM_MODEL", "gemini-2.5-flash")
+        default_factory=lambda: os.environ.get("SMRITI_LLM_MODEL", "gemini-3.1-flash-lite")
     )
     embedding_dim: int = 384
     token_budget: int = field(

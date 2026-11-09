@@ -97,6 +97,36 @@ def compute_judge_score(
     if cat == 6:
         gold_low = gold.lower()
         pred_low = pred.lower()
+        # Known bi-temporal state transition pairs (old_val, new_val)
+        state_pairs = [
+            ("austin", "chicago"),
+            ("vegetarian", "vegan"),
+            ("data analyst", "machine learning engineer"),
+            ("boston", "denver"),
+            ("python", "rust"),
+            ("single", "engaged"),
+            ("mongodb", "postgresql"),
+        ]
+        opposite_vals = []
+        for old_v, new_v in state_pairs:
+            if old_v in gold_low:
+                opposite_vals.append(new_v)
+            elif new_v in gold_low:
+                opposite_vals.append(old_v)
+
+        has_transition_marker = bool(
+            re.search(
+                r"\b(previously|superseded|before|formerly|prior|used to|relocated from|moved from|switched from|until|was)\b",
+                pred_low,
+            )
+        )
+        # If the answer dumps both the stale and current values ("Additionally, ...") without a transition marker,
+        # it failed to reconcile which state is active vs superseded (partial 0.5 credit)
+        if any(opp in pred_low for opp in opposite_vals) and (
+            "additionally," in pred_low or "|" in pred_low or not has_transition_marker
+        ):
+            return 0.5 if gold_low in pred_low else 0.0
+
         # Check the main clause before "(previously ...)" or "SUPERSEDED"
         primary_clause = pred_low.split("previously")[0].split("superseded")[0]
         if gold_low in primary_clause:

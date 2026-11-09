@@ -136,22 +136,35 @@ class SmritiMemoryAgent:
                 latency_ms=latency,
             )
 
-        # 4. Generate Grounded Response (Live LLM if configured, else Deterministic Extractive Synthesizer)
+        # 4. Generate Grounded Response (Live Gemini/OpenAI LLM + Layer 2 Symbolic Pre-Synthesis)
+        det_answer, det_abstained, det_prov = self._extractive_synthesize(query, q_info, bundle)
         answer_text = ""
         abstained = False
         raw_provenance: List[ClaimProvenance] = []
 
         if self.llm.has_live_api:
+            det_tids = []
+            for dp in det_prov:
+                for tid in dp.source_turn_ids:
+                    if tid not in det_tids:
+                        det_tids.append(tid)
             user_prompt = (
                 f"### 4-Layer Retrieved Memory Context (Budget: {bundle.total_tokens}/{bundle.budget_tokens} tokens)\n"
                 f"{bundle.formatted_prompt_context}\n\n"
+                f"### Layer 2 Pre-Anchored Candidate Synthesis\n"
+                f"Candidate Answer: {det_answer}\n"
+                f"Candidate Verified Turn IDs: {det_tids}\n\n"
                 f"### User Question\n{query}\n\n"
+                f"Instructions: Using the 4-Layer Memory Context and Pre-Anchored Candidate Synthesis above, "
+                f"write a concise, direct factual answer (1-2 sentences). Preserve exact resolved dates/times, "
+                f"bi-temporal state transitions (current vs previous values), and exact [turn_id] citations. "
                 f"Return JSON with `answer`, `abstained`, and `claims` (each with `claim_text` and `source_turn_ids`)."
             )
             llm_out = self.llm.generate(
                 prompt=user_prompt,
                 system_prompt=_SYSTEM_PROMPT,
                 temperature=self.config.temperature,
+                max_tokens=450,
                 json_mode=True,
             )
             parsed = self._parse_llm_json(llm_out)
@@ -166,12 +179,26 @@ class SmritiMemoryAgent:
                                 source_turn_ids=[str(x) for x in item.get("source_turn_ids", [])],
                             )
                         )
+                # Ensure high-precision Layer 2 provenance links are preserved
+                if not abstained and det_tids:
+                    if q_info.is_historical:
+                        raw_provenance = [
+                            ClaimProvenance(claim_text=answer_text, source_turn_ids=list(det_tids))
+                        ]
+                    else:
+                        cited_so_far = {tid for rp in raw_provenance for tid in rp.source_turn_ids}
+                        missing_tids = [t for t in det_tids if t not in cited_so_far]
+                        if missing_tids:
+                            if raw_provenance:
+                                raw_provenance[0].source_turn_ids.extend(missing_tids)
+                            else:
+                                raw_provenance.append(
+                                    ClaimProvenance(claim_text=answer_text, source_turn_ids=det_tids)
+                                )
 
-        # Fallback or deterministic extractive synthesis
+        # Fallback to deterministic extractive synthesis if offline or API call failed
         if not answer_text:
-            answer_text, abstained, raw_provenance = self._extractive_synthesize(
-                query, q_info, bundle
-            )
+            answer_text, abstained, raw_provenance = det_answer, det_abstained, det_prov
 
         # Also extract any inline [turn_id] mentions from answer_text if raw_provenance is empty
         if not raw_provenance and answer_text:
@@ -193,7 +220,7 @@ class SmritiMemoryAgent:
         )
 
         # Ensure inline citation appears in answer_text for transparency
-        if verified_claims and not re.search(r"\[[A-Za-z0-9_:\-]+\]", answer_text):
+        if verified_claims and not re.search(r"\[[A-Za-z0-9_:\-,\s]+\]", answer_text):
             primary_refs = ", ".join(verified_claims[0].source_turn_ids[:2])
             answer_text = f"{answer_text.rstrip('.')} [{primary_refs}]."
 

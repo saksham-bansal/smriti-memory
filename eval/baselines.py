@@ -85,6 +85,56 @@ def _baseline_synthesize_from_turns(
             prompt_tokens=prompt_tokens,
         )
 
+    # If Live LLM is configured, generate response from the baseline's raw retrieved window
+    if llm is not None and llm.has_live_api:
+        sys_p = (
+            "Answer the question concisely (1 sentence) using ONLY the provided conversation turns. "
+            "Cite supporting turn IDs in brackets like [D1:3]. If the answer is not in the provided "
+            "turns, set abstained=true. Return JSON: "
+            '{"answer": "...", "abstained": false, "cited_turn_ids": ["..."]}'
+        )
+        usr_p = f"### Memory Context Turns\n{prompt_text}\n\n### Question\n{query}"
+        raw_out = llm.generate(prompt=usr_p, system_prompt=sys_p, temperature=0.0, max_tokens=250, json_mode=True)
+        if raw_out:
+            try:
+                import json
+                cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_out.strip())
+                parsed = json.loads(cleaned)
+                ans_str = str(parsed.get("answer", "")).strip()
+                abst = bool(parsed.get("abstained", False))
+                cited = [str(x).strip("[]()") for x in parsed.get("cited_turn_ids", []) if x]
+                if not cited and ans_str:
+                    cited = re.findall(r"\[([A-Za-z0-9_:\-]+)\]", ans_str)
+                turn_lookup = {t.turn_id: t for t in candidate_turns}
+                valid_cited = [cid for cid in cited if cid in turn_lookup]
+                if not valid_cited and not abst and scored:
+                    valid_cited = [scored[0][0].turn_id]
+                prov_claims = []
+                for cid in valid_cited[:3]:
+                    t_obj = turn_lookup[cid]
+                    prov_claims.append(
+                        ClaimProvenance(
+                            claim_text=ans_str,
+                            source_turn_ids=[cid],
+                            source_session_ids=[t_obj.session_id],
+                            supporting_quotes=[f"{t_obj.turn_id} ({t_obj.timestamp}, {t_obj.speaker}): {t_obj.text}"],
+                            verified=True,
+                        )
+                    )
+                if ans_str:
+                    return AgentResponse(
+                        query=query,
+                        answer=ans_str,
+                        abstained=abst,
+                        claims=prov_claims,
+                        retrieved_turn_ids=[t.turn_id for t, _ in scored[:12]],
+                        retrieved_claim_ids=[],
+                        retrieved_wiki_titles=[],
+                        prompt_tokens=prompt_tokens,
+                    )
+            except Exception:
+                pass
+
     # Combine top 1-3 turns from the baseline's retrieved window (matching Smriti's 3-claim cap)
     chosen = [scored[0][0]]
     for cand_t, cand_s in scored[1:3]:
@@ -124,6 +174,7 @@ class RecencyBufferBaseline:
     def __init__(self, token_budget: int = 1500):
         self.token_budget = token_budget
         self.turns_by_conv: Dict[str, List[Turn]] = {}
+        self.llm = LLMClient()
 
     def ingest_session(self, session: SessionTranscript) -> None:
         self.turns_by_conv.setdefault(session.conversation_id, []).extend(session.turns)
@@ -143,7 +194,7 @@ class RecencyBufferBaseline:
             used += cost
         window.reverse()
         known_entities = sorted({t.speaker for t in all_turns})
-        resp = _baseline_synthesize_from_turns(query, window, known_entities)
+        resp = _baseline_synthesize_from_turns(query, window, known_entities, self.llm)
         resp.latency_ms = (time.perf_counter() - t0) * 1000.0
         return resp
 
@@ -159,6 +210,7 @@ class RollingSummaryBaseline:
         self.token_budget = token_budget
         self.summary_turns_by_conv: Dict[str, List[Turn]] = {}
         self.speakers_by_conv: Dict[str, List[str]] = {}
+        self.llm = LLMClient()
 
     def ingest_session(self, session: SessionTranscript) -> None:
         conv_id = session.conversation_id
@@ -197,7 +249,7 @@ class RollingSummaryBaseline:
             window.append(s)
             used += cost
         known_entities = self.speakers_by_conv.get(conversation_id, [])
-        resp = _baseline_synthesize_from_turns(query, window, known_entities)
+        resp = _baseline_synthesize_from_turns(query, window, known_entities, self.llm)
         resp.latency_ms = (time.perf_counter() - t0) * 1000.0
         return resp
 
@@ -214,6 +266,7 @@ class NaiveDenseRAGBaseline:
         self.store = SQLiteMemoryStore(":memory:")
         self.embedder = DenseEmbedder(dim=384)
         self.vector_index = VectorIndex(self.store, self.embedder)
+        self.llm = LLMClient()
 
     def ingest_session(self, session: SessionTranscript) -> None:
         self.store.insert_session(session)
@@ -244,6 +297,6 @@ class NaiveDenseRAGBaseline:
 
         all_turns = self.store.get_all_turns(conversation_id)
         known_entities = sorted({t.speaker for t in all_turns})
-        resp = _baseline_synthesize_from_turns(query, packed, known_entities)
+        resp = _baseline_synthesize_from_turns(query, packed, known_entities, self.llm)
         resp.latency_ms = (time.perf_counter() - t0) * 1000.0
         return resp

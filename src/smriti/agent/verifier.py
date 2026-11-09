@@ -101,8 +101,8 @@ class ProvenanceVerifier:
 
             turn_overlaps.sort(key=lambda x: x[1], reverse=True)
             top_ov = turn_overlaps[0][1] if turn_overlaps else 0
-            # Inspect the highest-overlap turns (within 1 stem of the maximum overlap)
-            best_turns = [t for t, ov in turn_overlaps if ov >= max(1, top_ov - 1)][:3]
+            # Inspect only the turns achieving the maximum topical stem overlap with the query
+            best_turns = [t for t, ov in turn_overlaps if ov == top_ov][:3]
 
             target_assertions = 0
             other_assertions = 0

@@ -13,7 +13,7 @@
 | :--- | :--- | :--- |
 | **1. Persistent Memory Across Restarts** | All 4 memory layers (Episodic turns, Bi-temporal claims, Compiled Wikis/Entity Graph, and `global.md` header) + `float32` dense vectors persist in a single ACID-compliant SQLite WAL database. | `make demo` / `make test` |
 | **2. Claim-Level Provenance** | Every extracted claim, Wiki bullet, and agent answer claim carries foreign-key `source_turn_ids`, `source_session_ids`, and verbatim `supporting_quotes` verified against Layer 1 by [`ProvenanceVerifier`](./src/smriti/agent/verifier.py). | `PYTHONPATH=src .venv/bin/pytest -k provenance` |
-| **3. Open Benchmark & Measured Gains** | Evaluated on **LoCoMo (`snap-research/locomo`, ACL 2024)** + a **Bi-Temporal Knowledge-Update Slice** (42 sessions, 800 turns, 102 questions). Improves Answer Judge Accuracy from **24.0% (Naive Dense RAG)** to **62.7% (`Smriti`)** and Provenance Citation Recall from **33.4%** to **56.1%** at **86.1% token savings**. | `make eval` |
+| **3. Open Benchmark & Measured Gains** | Evaluated with live `gemini-3.1-flash-lite` calls on **LoCoMo (`snap-research/locomo`, ACL 2024)** + a **Bi-Temporal Knowledge-Update Slice** (42 sessions, 800 turns, 102 questions). Improves Answer Judge Accuracy from **42.6% (Standard Dense RAG)** / **28.9% (Rolling Summary)** / **24.5% (Recency Buffer)** to **67.2% (`Smriti`)** and Provenance Citation Recall from **30.0%** to **54.4%** at **86.1% token savings**. | `make eval` |
 | **4. One-Command Reproducibility** | A single command reruns all 7 systems (3 baselines, `Smriti`, 3 ablations = 714 predictions) and rebuilds summary tables from `artifacts/eval_results/raw_predictions.jsonl`. | `make eval && make report` |
 
 ---
@@ -37,12 +37,12 @@ make setup
 make test
 ```
 
-### Optional LLM API Configuration
-`Smriti` includes both a unified LLM API client (`GEMINI_API_KEY` for `gemini-2.5-flash` or `OPENAI_API_KEY`) with persistent SQLite caching (`artifacts/llm_cache.db`) **and** a deterministic Extractive-Symbolic Reasoner so that ingestion, tests, and the full evaluation pipeline run reproducibly out-of-the-box with zero API cost.
+### LLM API Configuration & Caching
+`Smriti` uses a unified LLM API client (`GEMINI_API_KEY` for `gemini-3.1-flash-lite` or `OPENAI_API_KEY`) backed by a persistent SQLite prompt/response cache (`artifacts/llm_cache.db`, committed to the repo) plus a deterministic Extractive-Symbolic fallback when no API key or cached entry is available.
 
 ```bash
 cp .env.example .env
-# Optional: set GEMINI_API_KEY=... in .env
+# Set GEMINI_API_KEY=... in .env for uncached live LLM calls (cached benchmark calls replay from artifacts/llm_cache.db)
 ```
 
 ---
@@ -126,6 +126,6 @@ PYTHONPATH=src:. .venv/bin/python eval/download_data.py \
 ```
 
 ### Expected Runtime & Cost
-- **Runtime**: **~15–20 seconds** on a single CPU for all 7 configurations $\times$ 102 questions (714 evaluations across 800 ingested turns).
-- **API Cost**: **$0.00** in default deterministic mode (or ~$0.08 with `gemini-2.5-flash` uncached; $0.00 on cached reruns via `artifacts/llm_cache.db`).
+- **Runtime**: **~15–20 seconds** on a single CPU when replaying cached `gemini-3.1-flash-lite` responses from `artifacts/llm_cache.db` (or **~6–8 minutes** for a cold uncached run across all 7 configurations $\times$ 102 questions = 714 predictions).
+- **API Cost**: **~$0.05** for a cold uncached run with `gemini-3.1-flash-lite` (`385` unique LLM prompts across all 7 systems); **$0.00** on cached reruns via `artifacts/llm_cache.db`.
 

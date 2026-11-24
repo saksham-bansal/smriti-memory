@@ -1,6 +1,6 @@
 # Smriti: Bi-Temporal 4-Layer Agent Memory Across Sessions
 
-**`Smriti`** is a persistent cross-session memory system for AI agents—built and evaluated using **Google Gemini (`gemini-3.1-flash-lite`)**—that combines **Anthropic’s 4-Layer Memory Hierarchy & Offline "Dreaming" Consolidation** (*Transcripts $\rightarrow$ Atomic Memory Notes $\rightarrow$ Linked Entity/Topic Wikis $\rightarrow$ Always-Loaded `global.md` Index*) with **Graphiti-style Bi-Temporal State Supersession** (`ACTIVE` vs. `SUPERSEDED` validity intervals) and **Mandatory Claim-Level Provenance** back to source dialogue turns.
+**`Smriti`** is a persistent cross-session memory system for AI agents—built and evaluated using **Google Gemini (`gemini-3.1-flash-lite`)**—that combines **Anthropic’s 4-Layer Memory Hierarchy & Offline "Dreaming" Consolidation** (*Transcripts → Atomic Memory Notes → Linked Entity/Topic Wikis → Always-Loaded `global.md` Index*) with **Graphiti-style Bi-Temporal State Supersession** (`ACTIVE` vs. `SUPERSEDED` validity intervals) and **Mandatory Claim-Level Provenance** back to source dialogue turns.
 
 - **Architecture & Design**: See [**`DESIGN.md`**](./DESIGN.md)
 - **Benchmark Evaluation, Baselines, Ablations & Error Analysis**: See [**`EVAL.md`**](./EVAL.md)
@@ -116,7 +116,7 @@ Example JSON output from `smriti ask`:
 
 ## 4. Benchmark Results Summary (Evaluated with `gemini-3.1-flash-lite`)
 
-All 7 configurations (3 standard baselines, `Smriti`, and 3 architectural ablations) were evaluated with live **`gemini-3.1-flash-lite`** calls under an identical **$B = 1,500$ token budget** across **42 sessions, 800 dialogue turns, and 102 stratified questions** (714 total predictions) from **LoCoMo (`snap-research/locomo`, ACL 2024)** + a **Bi-Temporal Knowledge-Update Slice**:
+All 7 configurations (3 standard baselines, `Smriti`, and 3 architectural ablations) were evaluated with live **`gemini-3.1-flash-lite`** calls under an identical **1,500-token budget** across **42 sessions, 800 dialogue turns, and 102 stratified questions** (714 total predictions) from **LoCoMo (`snap-research/locomo`, ACL 2024)** + a **Bi-Temporal Knowledge-Update Slice**:
 
 | System / Configuration (`gemini-3.1-flash-lite`) | Answer Judge Score (%) | Answer Token Recall (%) | Provenance Citation F1 (%) | Provenance Citation Recall (%) | Context Retrieval Recall@k (%) | Citation Validity (%) | Mean Prompt Tokens | Token Savings vs. Full Replay (%) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -131,7 +131,7 @@ All 7 configurations (3 standard baselines, `Smriti`, and 3 architectural ablati
 ### Key Category & Ablation Highlights (See [**`EVAL.md`**](./EVAL.md) for Full Breakdown)
 - **Single-Hop & Multi-Hop Recall**: `Smriti` achieves **60.0% Single-Hop** and **55.0% Multi-Hop** accuracy vs. **15.0% Single-Hop** and **25.0% Multi-Hop** for Standard Dense Vector RAG.
 - **Temporal Reasoning (`86.4%`)**: Anchoring relative expressions (*"yesterday"*, *"last Friday"*, *"two weekends ago"*) at ingestion time lifts Temporal accuracy to **86.4%** (vs. **59.1%** Dense RAG, **22.7%** Rolling Summary, and **27.3%** when `TemporalNormalizer` is ablated).
-- **Bi-Temporal State Updates (`93.8%`) & Dream Consolidation**: Disabling offline Dreaming & Bi-Temporal Supersession drops State-Update accuracy from **93.8% $\rightarrow$ 68.8%** (`-25.0 pts`) and Multi-Hop accuracy from **55.0% $\rightarrow$ 37.5%** (`-17.5 pts`).
+- **Bi-Temporal State Updates (`93.8%`) & Dream Consolidation**: Disabling offline Dreaming & Bi-Temporal Supersession drops State-Update accuracy from **93.8% → 68.8%** (`-25.0 pts`) and Multi-Hop accuracy from **55.0% → 37.5%** (`-17.5 pts`).
 - **Adversarial Speaker-Swap Abstention (`81.8%`)**: `Smriti`'s speaker-ownership verifier reaches **81.8%** accuracy on false-premise traps vs. **63.6%** for Dense RAG and **50.0%** for Recency Buffer.
 
 ---
@@ -149,6 +149,6 @@ PYTHONPATH=src:. .venv/bin/python eval/download_data.py \
 ```
 
 ### Expected Runtime & Cost
-- **Runtime**: **~15–20 seconds** on a single CPU when replaying cached `gemini-3.1-flash-lite` responses from `artifacts/llm_cache.db` (or **~6–8 minutes** for a cold uncached run across all 7 configurations $\times$ 102 questions = 714 predictions).
-- **API Cost**: **~$0.05** for a cold uncached run with `gemini-3.1-flash-lite` (`385` unique LLM prompts across all 7 systems); **$0.00** on cached reruns via `artifacts/llm_cache.db`.
+- **Runtime**: **~15–20 seconds** on a single CPU when replaying cached `gemini-3.1-flash-lite` responses from `artifacts/llm_cache.db` (or **~6–8 minutes** for a cold uncached run across all 7 configurations × 102 questions = 714 predictions).
+- **API Cost**: **`~$0.05`** for a cold uncached run with `gemini-3.1-flash-lite` (`385` unique LLM prompts across all 7 systems); **`$0.00`** on cached reruns via `artifacts/llm_cache.db`.
 

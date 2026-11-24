@@ -139,7 +139,7 @@ To satisfy **Hard Requirement 2**, [`ProvenanceVerifier`](file:///Users/palakban
 
 ### 5.2 Honest Failure Modes Observed in Evaluation
 1. **Implicit Commonsense / World-Knowledge Inference (Category 3 — 40.0% Judge Acc)**:
-   - When asked *"Would Caroline likely have Dr. Seuss books on her bookshelf?"* (ground truth: *"Yes, since she collects classic children's books"* in `D6:9`), lexical and concept-cluster matching between `"Dr. Seuss"` and `"classic children's books"` fails without world-knowledge entity expansion linking *Dr. Seuss $\rightarrow$ children's books*.
+   - When asked *"Would Caroline likely have Dr. Seuss books on her bookshelf?"* (ground truth: *"Yes, since she collects classic children's books"* in `D6:9`), lexical and concept-cluster matching between `"Dr. Seuss"` and `"classic children's books"` fails without world-knowledge entity expansion linking *Dr. Seuss → children's books*.
 2. **Compound Relative Temporal Chains**:
    - When a turn references an event relative to *another* event rather than the session timestamp (e.g., *"three days after we got back from the road trip"*), single-turn temporal normalization anchors to `session_timestamp` instead of resolving the cross-turn event date first.
 3. **Third-Person Pronoun Coreference Across >2 Turns**:

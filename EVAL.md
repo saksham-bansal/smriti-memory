@@ -38,7 +38,7 @@ We selected **LoCoMo** (*Evaluating Very Long-Term Conversational Memory of LLM 
 ### 2.2 Reproducible Subset Selection ([`eval/download_data.py`](file:///Users/palakbansal/.gemini/antigravity/scratch/smriti-memory/eval/download_data.py))
 - Using fixed random seed `42`, `eval/download_data.py` ingests **100% of the sessions and turns** of the first two full LoCoMo multi-session conversations (`conv-26`: 19 sessions, 419 turns; `conv-30`: 19 sessions, 369 turns) plus the 4-session Bi-Temporal Knowledge-Update conversation (`bi_temporal_updates_01`: 4 sessions, 12 turns), totaling **3 conversations, 42 sessions, and 800 turns**.
 - From the full question pool, it draws a stratified sample of **102 questions** balanced across all 6 categories (`20 Single-Hop`, `20 Multi-Hop`, `22 Temporal`, `10 Inference`, `22 Adversarial`, `8 Bi-Temporal Update`).
-- **Scope Limitation**: We evaluate on 3 complete multi-session histories (800 turns, 102 questions $\times$ 7 systems = 714 evaluations) rather than all 10 LoCoMo conversations so the full benchmark + 3 ablations executes in **< 25 seconds** on a single CPU laptop. Passing `--num-convs 10 --per-category 50` to `eval/download_data.py` scales to the full dataset.
+- **Scope Limitation**: We evaluate on 3 complete multi-session histories (800 turns, 102 questions × 7 systems = 714 evaluations) rather than all 10 LoCoMo conversations so the full benchmark + 3 ablations executes in **< 25 seconds** on a single CPU laptop. Passing `--num-convs 10 --per-category 50` to `eval/download_data.py` scales to the full dataset.
 
 ---
 
@@ -116,7 +116,7 @@ All baselines and `Smriti` variants operate under the **exact same context token
 
 3. **Ablation 2 — Removing Relative-to-Absolute Temporal Anchoring (`67.2% -> 53.4%`)**:
    - Disabling `TemporalNormalizer` causes **Temporal Reasoning accuracy to collapse from `86.4%` to `27.3%` (-59.1 percentage points)** and overall Judge Accuracy to drop by **13.8 percentage points**.
-   - Without ingestion-time anchoring (`"yesterday"` $\rightarrow$ `"5 July 2023"`, `"two weekends ago"` $\rightarrow$ `"two weekends before 17 July 2023"`, `"Seven years now"` $\rightarrow$ `"7 years (Since 2016)"`), the LLM frequently reports the unanchored session timestamp or raw relative phrase rather than the resolved event date.
+   - Without ingestion-time anchoring (`"yesterday"` → `"5 July 2023"`, `"two weekends ago"` → `"two weekends before 17 July 2023"`, `"Seven years now"` → `"7 years (Since 2016)"`), the LLM frequently reports the unanchored session timestamp or raw relative phrase rather than the resolved event date.
 
 4. **Ablation 3 — Removing Hybrid FTS5 BM25 & Entity Graph (`67.2% -> 63.7%`, Citation Recall `54.4% -> 46.7%`)**:
    - Relying on dense embeddings alone drops **Single-Hop Provenance Citation Recall by 15.0 percentage points (`60.0% -> 45.0%`)**, **Temporal Reasoning accuracy by 13.7 percentage points (`86.4% -> 72.7%`)**, and overall Citation F1 from `43.3% -> 38.6%`, proving that exact BM25 lexical matching + 1-hop entity graph expansion is vital for pinpointing rare proper nouns and exact turn IDs.
